@@ -218,7 +218,7 @@ void ir_receive()
   }    
 }
 
-
+/*
 void ir_txContacts(void)
 {
   //led(3, ON);                                // Commented 8/23 4:46 PM
@@ -244,10 +244,36 @@ void ir_txContacts(void)
     ir_send(&record);
     pause(100);
   } 
-  info done = {{"txDone"}, {"done@domain.com"}};
+  info done = {{"txDone"}, {"DONE"}, 0};
   ir_send(&done);  
-}    
+}
+*/
 
+void ir_txContacts(void)
+{
+  ee_badge_check();
+  info record;
+  char s[48];
+  int a = badgeInfoAnchor + 8;
+  int sos = sizeof(s);
+  memset(s, 0, sizeof(s));
+  // int a = badgeLastRecordAddr;
+  for(int i = 0; i < badgeRecordCount; i++)
+  {
+    int offset = 0;
+    ee_getStr(s, sos, a);
+    int ss = 1 + strlen(s);
+    strcpy(record.name, s);
+    offset += ss;
+    ss = 1 + strlen(&s[offset]);
+    strcpy(record.email, &s[offset]);
+    a += (offset + ss);
+    ir_send(&record);
+    pause(100);
+  }
+  info done = {{"txDone"}, {"DONE"}, 0};
+  ir_send(&done);  
+}
 
 void message_get(info *target)
 {
@@ -257,7 +283,7 @@ void message_get(info *target)
   inbox = 0; 
 }  
 
-int check_inbox(void )
+int check_inbox(void)
 {
   return inbox;
 }  
@@ -426,15 +452,6 @@ void ee_uploadContacts(fdserial *term)
   }
   ee_wipe();
 }    
-
-
-
-
-
-
-
-
-
 
 /*
 void ir_receive()

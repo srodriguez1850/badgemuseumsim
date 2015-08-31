@@ -32,8 +32,8 @@ void main()
   
   pause(200);
   char_size(SMALL);
-  cursor(3, 3);
-  display("Uploading?");
+  cursor(2, 3);
+  display("Wipe EEPROM?");
   cursor(4, 5);
   display("Hold OSH");
   leds_set(0b000000);
@@ -52,47 +52,8 @@ void main()
   
   if (heldatstart == 1 && pad(6) == 1)
   {
-    clear();
-    port = fdserial_open(31, 30, 0, 115200);
-    // Check for host upload
-    int attempt = 0;
-    while (attempt < 50)
-    {
-      dprint(port, "Propeller\n");
-      pause(200);  // We need this pause, since the host needs time to respond. 5 x 1 second = 10 second timeout
-      if (fdserial_rxCount(port) == 0)
-      {
-        attempt++;
-        continue;
-      }      
-      else if (fdserial_rxCount(port) < 5)
-      {
-        fdserial_rxFlush(port);
-        attempt++;
-        continue;
-      }
-      else dscan(port, "%s", handshake);
-      // Attempt handshake and listen to response
-      if (strcmp(handshake, "H0st") == 0)
-      {
-        char_size(SMALL);
-        cursor(3, 3);
-        display("CONNECTED!");
-        cursor(2, 4);
-        display("Uploading...");
-        dprint(port, "PropSTART\n");
-        ee_uploadContacts(port);
-        cursor(0, 5);
-        display("Upload complete!");
-        return;
-      }      
-      attempt++;
-    }
+    ee_wipe();    
   }
-        
-  // Need to dprint for it to work?
-  //dprint(port, "IR Test\n");
-  //fdserial_close(port);
   
   leds_set(0b100001);
   ir_start();
@@ -144,7 +105,6 @@ void main()
     else if(check_inbox() == 1)
     {
       clear();
-      memset(&last, 0, sizeof(info));
       message_get(&their);
       if (!strcmp(their.email, "DUMP"))
       {
@@ -152,6 +112,7 @@ void main()
         cursor(0, 1);
         display("IR Dump Routine.");
         ir_txContacts();
+        clear_inbox();
         cursor(0, 7);
         display("OSH to Continue.");
         rgb(L, OFF);
@@ -161,6 +122,7 @@ void main()
       }
       else
       {       
+        memset(&last, 0, sizeof(info));
         last = their;
         ee_save(&their);
         cursor(2, 1);
@@ -183,7 +145,7 @@ void main()
       cursor(5, 6);
       display("Ready.");
       leds_set(0b101101);
-      pause(200);
+      pause(100);
     }      
   }    
 }  
