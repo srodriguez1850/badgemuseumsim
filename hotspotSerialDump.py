@@ -1,5 +1,13 @@
 import serial, sys, glob, time, os, traceback, datetime
 
+### OPTIONS ###
+
+HARDCODED_PORT = 1
+HARD_PORT_STRING = 'COM8'
+DEBUG_SERIAL_LIST = 1
+
+### OPTIONS ###
+
 ### HELPER FUNCTIONS ###
 def serial_ports():
     """ Lists serial port names
@@ -36,15 +44,16 @@ def stripped(string):
 	return ''.join([i for i in string if 31 < ord(i) < 127])
 ### HELPER FUNCTIONS ###
 
-h = 'COM8'
-
 ### MAIN ###
 try:
 	ports = serial_ports()
 	for p in ports:
 		try:
 			# Try opening port, send reset signal and establish connection
-			port = serial.Serial(h, 115200, timeout=1)
+			if HARDCODED_PORT == 1:
+				port = serial.Serial(HARD_PORT_STRING, 115200, timeout=1)
+			else:
+				port = serial.Serial(p, 115200, timeout=1)
 			port.close()
 			break
 		except:
@@ -53,11 +62,14 @@ try:
 	try:
 		port.isOpen()
 	except:
-		raw_input('Unable to find a hotspot, press Enter to continue.')
+		raw_input('Unable to find a hotspot, press Enter to exit.')
 		exit()
 
 	# Wait until we receive handshake
-	print 'Port opened, connecting to hotspot.'
+	if HARDCODED_PORT == 1:
+		print 'Hardcoded port opened, connecting to hotspot.'
+	else:
+		print 'Dynamic port opened, connecting to hotspot.'
 	port.open()
 	while stripped(port.readline()) != 'Propeller':
 		time.sleep(1)
@@ -67,8 +79,8 @@ try:
 	print 'Initializing stream.'
 	port.write('H0st\n')
 	time.sleep(1)
-
 	print 'Opened stream.\n'
+
 	while True:
 
 		# Keep an open stream of data
@@ -89,6 +101,10 @@ try:
 		for i in xrange(0, num_records):
 			field1.append(stripped(port.readline()))
 			field2.append(stripped(port.readline()))
+
+		if DEBUG_SERIAL_LIST == 1:
+			print field1
+			print field2
 
         # Dump to file
 		f = open('hotspotdata.txt', 'a')

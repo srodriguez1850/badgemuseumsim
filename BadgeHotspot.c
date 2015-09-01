@@ -51,6 +51,13 @@ void main()
     char_size(BIG);
     cursor(0, 0);
     display("HOTSPOT!");
+    char_size(SMALL);
+    cursor(4, 5);
+    display("Start an");
+    cursor(1, 6);
+    display("interaction to");
+    cursor(0, 7);
+    display("upload your data");
     
     memset(&their, 0, sizeof(info));
     
@@ -62,15 +69,13 @@ void main()
       clear();
       message_get(&their);
       ir_send(&my);
-       
-      pause(1000); 
       
       while(1)
       {
         if (CNT - t > dt)
         {
           dprint(port, "PropSTART\n");
-          ee_uploadContacts(port);
+          ee_uploadContacts(port);  
           dprint(port, "Timeout\n");
           clear_inbox();
           break;

@@ -2,7 +2,9 @@
 #include "badgealpha.h"
 #include "fdserial.h"
 
-info my = {{"000000"}, {"000000"}, 0};
+info my = {{" "}, {"INFO"}, 0};
+info my_init = {{" "}, {"INIT"}, 0};
+info my_resp = {{" "}, {"RESP"}, 0};
 info their;
 info last = {{" "}, {" "}, 0};
 
@@ -28,7 +30,8 @@ void main()
   char id[7];
   ee_getStr(id, 7, id_address);
   strcpy(my.name, id);
-  strcpy(my.email, id);
+  strcpy(my_init.name, id);
+  strcpy(my_resp.name, id);
   
   pause(200);
   char_size(SMALL);
@@ -71,7 +74,7 @@ void main()
       screen_autoUpdate(OFF);
       char_size(SMALL);
       cursor(3, 2); 
-      display("ID: %s", my.email);
+      display("ID: %s", my_init.name);
       cursor(0, 5);
       display("Last Interaction");
       cursor(5, 7);
@@ -88,60 +91,106 @@ void main()
     else if (pad(1) == 1 && pad(4) == 1)
     {
       clear();
-      cursor(3, 3);
+      cursor(3, 2);
       display("Sending...");
       led(4, ON); 
       led(1, ON);
       rgb(L, BLUE);
-      ir_send(&my);
+      ir_send(&my_init);
       rgb(L, OFF);
-      cursor(6, 5);
+      cursor(6, 4);
       display("DONE");
-      while (pad(1) == 1 && pad(4) == 1);
+      cursor(3, 6);
+      display("Waiting...");      
       led(4, OFF);
       led(1, OFF);
-      clear();
-    }
-    else if(check_inbox() == 1)
-    {
+      
+      int t = CNT;
+      int dt = CLKFREQ * 2;
+      int response = 1;
+      
+      while (check_inbox() == 0)
+      {
+        if (CNT - t > dt)
+        {
+          clear();
+          response = 0;
+          break;
+        }
+      }
+      if (response == 0) continue;
+      
       clear();
       message_get(&their);
-      if (!strcmp(their.email, "DUMP"))
+      if (!strcmp(their.email, "RESP"))
       {
-        clear();
-        cursor(0, 1);
-        display("IR Dump Routine.");
-        ir_txContacts();
-        clear_inbox();
-        cursor(0, 7);
-        display("OSH to Continue.");
-        rgb(L, OFF);
-        while(pad(6) != 1);     
-        rgb(R, OFF);
-        clear();
-      }
-      else
-      {       
         memset(&last, 0, sizeof(info));
         last = their;
         ee_save(&their);
         cursor(2, 1);
         display("INTERACTION!");
         cursor(3, 4);
-        display("ID: %s", their.email);
+        display("ID: %s", their.name);
         cursor(0, 7);
         display("OSH to Continue.");
         rgb(L, OFF);
-        while(pad(6) != 1);     
+        while(pad(6) != 1);
         rgb(R, OFF);
         clear();
-      }      
+      }
+      else if (!strcmp(their.email, "DUMP"))
+      {
+        clear();
+        rgb(L, RED);
+        rgb(R, RED);
+        cursor(1, 3);
+        display("EEPROM IR Dump");
+        cursor(3, 5);
+        display("Keep badge");
+        cursor(1, 6);
+        display("facing hotspot");
+        ir_txContacts();
+        clear_inbox();
+        rgb(L, OFF);
+        rgb(R, OFF);
+        pause(200);
+        clear();
+      }
+      else
+      {
+        rgb(L, OFF);
+        rgb(R, OFF);
+      }        
+    }
+    else if(check_inbox() == 1)
+    {
+      clear();
+      message_get(&their);
+      if (!strcmp(their.email, "INIT"))
+      {
+        memset(&last, 0, sizeof(info));
+        last = their;
+        ee_save(&their);
+        cursor(2, 1);
+        display("INTERACTION!");
+        rgb(L, BLUE);
+        ir_send(&my_resp);
+        rgb(L, OFF);
+        cursor(3, 4);
+        display("ID: %s", their.name);
+        cursor(0, 7);
+        display("OSH to Continue.");
+        rgb(L, OFF);
+        while(pad(6) != 1);
+        rgb(R, OFF);
+        clear();
+      }           
     }
     else
     {
       char_size(SMALL);
       cursor(3, 2); 
-      display("ID: %s", my.name);
+      display("ID: %s", my_init.name);
       cursor(5, 6);
       display("Ready.");
       leds_set(0b101101);
