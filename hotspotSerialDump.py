@@ -84,17 +84,20 @@ try:
 	while True:
 
 		# Keep an open stream of data
-		while 'PropSTART' not in stripped(port.readline()):
+		while 'txBegin' not in stripped(port.readline()):
 			pass
-
-		print str(datetime.datetime.now()) + ': Retrieved interactions, dumping to host.'
 
 		# Debug transmission
 		#print port.read(port.inWaiting())
 		#print port.inWaiting()
 
+		timeout_buffer = port.readline()
+		if stripped(timeout_buffer) == 'Timeout':
+			print str(datetime.datetime.now()) + ': IR connection timed out, please try again.'
+			continue
+
 	    # Get records, should always find a record
-		num_records = ord(port.readline()[0])
+		num_records = ord(timeout_buffer[0])
 
 		field1 = []
 		field2 = []
@@ -102,11 +105,13 @@ try:
 			field1.append(stripped(port.readline()))
 			field2.append(stripped(port.readline()))
 
-		if DEBUG_SERIAL_LIST == 1:
-			print field1
-			print field2
+		print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
 
-        # Dump to file
+		if DEBUG_SERIAL_LIST == 1:
+			print 'field1: ' + str(field1)
+			print 'field2: ' + str(field2)
+
+		# Dump to file
 		f = open('hotspotdata.txt', 'a')
 		for i in xrange(2, num_records):
 			f.write(field1[1] + ',' + field1[i] + '\n')

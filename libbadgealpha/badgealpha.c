@@ -450,7 +450,6 @@ void ee_uploadContacts(fdserial *term)
     dprint(term, record.email);
     dprint(term, "\n");
   }
-  ee_wipe();
 }    
 
 /*

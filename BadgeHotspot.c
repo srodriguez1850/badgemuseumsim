@@ -70,14 +70,26 @@ void main()
       message_get(&their);
       ir_send(&my);
       
+      char_size(SMALL);
+      cursor(2, 2);
+      display("Receiving...");
+      
       while(1)
       {
         if (CNT - t > dt)
         {
-          dprint(port, "PropSTART\n");
-          ee_uploadContacts(port);  
+          clear();
+          char_size(SMALL);
+          cursor(5, 2);
+          display("ERROR!");
+          cursor(0, 5);
+          display("Please try again");
+          dprint(port, "txBegin\n");  
           dprint(port, "Timeout\n");
+          ee_wipe();
           clear_inbox();
+          pause(2000);
+          clear();
           break;
         }
         if (check_inbox() == 1)
@@ -87,8 +99,12 @@ void main()
           if(!strcmp(their.name, "txDone"))
           {
             //dprint(port, "End of records.\n\n");
-            dprint(port, "PropSTART\n");
+            char_size(SMALL);
+            cursor(0, 5);
+            display("Upload complete");
+            dprint(port, "txBegin\n");
             ee_uploadContacts(port);
+            ee_wipe();
             clear_inbox();
             pause(1000);
             clear();
