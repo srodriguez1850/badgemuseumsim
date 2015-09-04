@@ -200,7 +200,7 @@ void main()
   }    
 }  
 
-void screen_img180()
+/*void screen_img180()
 {
   uint32_t screenbuf = screen_getBuffer();
   char *scrbuf = (char *) screenbuf;
@@ -226,6 +226,37 @@ void screen_img180()
   } 
   memset(scrbuf, 0, 1024);
   memcpy(scrbuf, altbuf, 1024);
+  screen_autoUpdate(ON); 
+}*/
+
+void screen_img180()
+{
+  uint32_t screenbuf = screen_getBuffer();
+  char *scrbuf = (char *) screenbuf;
+  screen_autoUpdate(OFF);
+  int byte, bit, pix, xp, yp, bytep, bitp, pixp;
+  for(int x = 0; x < 64; x++)
+  {
+    for(int y = 0; y < 64; y++)
+    {
+      byte = ((y >> 3) << 7) + x;
+      bit = y % 8;  
+      pix = 1 & (scrbuf[byte] >> bit);
+      
+      xp = 127 - x;
+      yp = 63 - y;
+
+      bytep = ((yp >> 3) << 7) + xp;
+      bitp = yp % 8;  
+      pixp = 1 & (scrbuf[bytep] >> bitp);
+
+      scrbuf[bytep] &= ~(1 << bitp);
+      scrbuf[bytep] |= (pix << bitp);
+      
+      scrbuf[byte] &= ~(1 << bit);
+      scrbuf[byte] |= (pixp << bit);
+    }
+  } 
   screen_autoUpdate(ON); 
 }
 
