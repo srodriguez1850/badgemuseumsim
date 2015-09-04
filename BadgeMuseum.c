@@ -188,11 +188,12 @@ void main()
     }
     else
     {
+      char_size(BIG);
+      cursor(0, 0); 
+      display("%s", my_init.name);
       char_size(SMALL);
-      cursor(3, 2); 
-      display("ID: %s", my_init.name);
-      cursor(5, 6);
-      display("Ready.");
+      cursor(4, 6);
+      display("...is ready.");
       leds_set(0b101101);
       pause(100);
     }      
