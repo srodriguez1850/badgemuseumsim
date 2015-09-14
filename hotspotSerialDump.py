@@ -105,6 +105,10 @@ try:
 			field1.append(stripped(port.readline()))
 			field2.append(stripped(port.readline()))
 
+		if 'DUMP' not in field2[0]:
+			print str(datetime.datetime.now()) + ': Retrieved interactions, content may be corrupted.'
+			continue
+
 		print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
 
 		if DEBUG_SERIAL_LIST == 1:
@@ -121,3 +125,5 @@ except Exception, err:
 	print(traceback.format_exc())
 	raw_input('Enter to continue.')
 	port.close()
+
+# checksum on content (pass number to serial and then checksum on the host)
