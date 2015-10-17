@@ -2,7 +2,7 @@ import serial, sys, glob, time, os, traceback, datetime
 
 ### OPTIONS ###
 
-HARDCODED_PORT = 1
+HARDCODED_PORT = 0
 HARD_PORT_STRING = 'COM8'
 DEBUG_SERIAL_LIST = 1
 

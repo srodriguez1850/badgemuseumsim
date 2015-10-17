@@ -2,11 +2,11 @@
 #include "badgealpha.h"
 #include "fdserial.h"
 
-info my = {{" "}, {"INFO"}, 0};
-info my_init = {{" "}, {"INIT"}, 0};
-info my_resp = {{" "}, {"RESP"}, 0};
+info my = {{" "}, {"INFO"}, 0, 0};
+info my_init = {{" "}, {"INIT"}, 0, 0};
+info my_resp = {{" "}, {"RESP"}, 0, 0};
 info their;
-info last = {{" "}, {" "}, 0};
+info last = {{" "}, {" "}, 0, 0};
 
 int id_address = 65335;
 
@@ -96,6 +96,7 @@ void main()
       led(4, ON); 
       led(1, ON);
       rgb(L, BLUE);
+      strcpy(my_init.itime, (char)CNT);
       ir_send(&my_init);
       rgb(L, OFF);
       cursor(6, 4);
@@ -174,6 +175,7 @@ void main()
         cursor(2, 1);
         display("INTERACTION!");
         rgb(L, BLUE);
+        strcpy(my_resp.itime, (char)CNT);
         ir_send(&my_resp);
         rgb(L, OFF);
         cursor(3, 4);
@@ -181,7 +183,15 @@ void main()
         cursor(0, 7);
         display("OSH to Continue.");
         rgb(L, OFF);
-        while(pad(6) != 1);
+        int t = CNT;
+        int dt = CLKFREQ * 2;
+        while (pad(6) != 1)
+        {
+          if (CNT - t > dt)
+          {
+            break;
+          }
+        }
         rgb(R, OFF);
         clear();
       }           
