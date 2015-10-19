@@ -1,26 +1,35 @@
 #include "simpletools.h"
-#include "badgealpha.h"
+#include "badgetools.h"
 #include "fdserial.h"
 
-// Hotspot information to transmit
-info my = {{"htspt1"}, {"DUMP"}, 0};
+typedef struct info_st
+{
+  char id[7];
+  unsigned int cnt;
+} info;
+
 info their;
 
 char handshake[5];
-fdserial *port;
+fdserial* port;
+unsigned int CLKLIMIT;
+
+void upload_contacts(fdserial* port);
+void save_contact(info* c);
 
 void main()
 {
   badge_setup();
   simpleterm_close();
-  ir_start();
-  ee_wipe();
+  contacts_clearAll();
+  CLKLIMIT = CLKFREQ * 2;
   
   // Connection to host routine (FORCE CONNECTION TO HOST)
   port = fdserial_open(31, 30, 0, 115200);
-  char_size(SMALL);
+  text_size(SMALL);
   cursor(2, 4);
-  display("Connecting...");
+  oledprint("Connecting...");
+  /*
   while(1)
   {
     dprint(port, "Propeller\n");
@@ -41,6 +50,7 @@ void main()
       break;
     }      
   }
+  */
   clear();
   
   while(1)
@@ -48,73 +58,96 @@ void main()
     rgb(L, OFF);
     rgb(R, OFF);
         
-    char_size(BIG);
+    text_size(LARGE);
     cursor(0, 0);
-    display("HOTSPOT!");
-    char_size(SMALL);
+    oledprint("HOTSPOT!");
+    text_size(SMALL);
     cursor(4, 5);
-    display("Start an");
+    oledprint("Start an");
     cursor(1, 6);
-    display("interaction to");
+    oledprint("interaction to");
     cursor(0, 7);
-    display("upload your data");
+    oledprint("upload your data");
     
     memset(&their, 0, sizeof(info));
     
     int t = CNT;
-    int dt = CLKFREQ * 2;
+    char i_type[5];
     
-    if (check_inbox() == 1)
+    // WHY IS THERE A TIMING MISMATCH
+    // WHY IS IT BEING CUT OFF
+    
+    irscan("%s%s", their.id, i_type);
+    irclear();
+    
+    if (strlen(their.id) > 0)
     {
+      pause(50);
       clear();
-      message_get(&their);
-      ir_send(&my);
+      irprint("%7s\n%5s\n", "htspt1", "DUMP");
       
-      char_size(SMALL);
+      text_size(SMALL);
       cursor(2, 2);
-      display("Receiving...");
+      oledprint("Receiving...");
       
       while(1)
       {
-        if (CNT - t > dt)
+        pause(200);
+        memset(&their, 0, sizeof(info));
+        irscan("%s%u", their.id, their.cnt);
+        irclear();
+        if (CNT - t > CLKLIMIT)
         {
           clear();
-          char_size(SMALL);
+          text_size(SMALL);
           cursor(5, 2);
-          display("ERROR!");
+          oledprint("ERROR!");
           cursor(0, 5);
-          display("Please try again");
+          oledprint("Please try again");
           dprint(port, "txBegin\n");  
           dprint(port, "Timeout\n");
-          ee_wipe();
-          clear_inbox();
+          contacts_clearAll();
           pause(2000);
           clear();
           break;
         }
-        if (check_inbox() == 1)
+        if (strlen(their.id) > 0)
         {
           t = CNT;
-          message_get(&their);
-          if(!strcmp(their.name, "txDone"))
+          if(!strcmp(their.id, "irDone"))
           {
-            //dprint(port, "End of records.\n\n");
-            char_size(SMALL);
+            text_size(SMALL);
             cursor(0, 5);
-            display("Upload complete");
+            oledprint("Upload complete");
             dprint(port, "txBegin\n");
-            ee_uploadContacts(port);
-            ee_wipe();
-            clear_inbox();
+            //upload_contacts(port);
+            contacts_clearAll();
             pause(1000);
             clear();
             break;
           }
-          ee_save(&their);
-          //dprint(port, "Name: %s\n", their.name);
-          //dprint(port, "Email: %s\n", their.email);       
+          save_contact(&their);
+          dprint(port, "ID: %s\n", their.id);
+          dprint(port, "Cnt: %u\n", their.cnt);       
         }
       }        
     }      
   }    
-}  
+}
+
+void upload_contacts(fdserial* port)
+{
+  int c_count = contacts_count();
+  for (int i = 0; i < c_count; i++)
+  {
+    char id[7];
+    unsigned int cnt;
+    eescan(i, "%s%u", &id, &cnt);
+    dprint(port, "%7s\n%u", id, cnt);
+  }    
+}
+
+void save_contact(info* c)
+{
+  eeprint("%7s\n%u\n", c->id, c->cnt);
+}

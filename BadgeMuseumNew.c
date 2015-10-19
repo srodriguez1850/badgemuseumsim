@@ -5,14 +5,13 @@
 typedef struct info_st
 {
   char id[7];
-  char cnt[5];
+  unsigned int cnt;
 } info;
 
-info my = {{" "}, 0, 0};
+info my = {{" "}, 0};
 info their;
 
 int id_address = 65335;
-// contacts_eraseAll proves to be volatile?
 
 char id[7];
 char last[7] = " ";
@@ -20,12 +19,13 @@ char last[7] = " ";
 char handshake[5];
 fdserial *port;
 
-int y;  // accelerometer
 int heldatstart = 0;
-unsigned CNT_sec;
+volatile unsigned int CNT_sec;
 
 void OSHorWait(int sec);
-void cnt_seconds();
+void cnt_seconds(void);
+void ir_txContacts(void);
+void save_contact(info* c);
 
 void main()
 {
@@ -37,6 +37,9 @@ void main()
   leds(0b111111);
   ee_getStr(id, 7, id_address);
   strcpy(my.id, id);
+  
+  // Start second counter
+  cog_run(&cnt_seconds, 64);
   
   pause(200);
   text_size(SMALL);
@@ -60,7 +63,7 @@ void main()
   
   if (heldatstart == 1 && button(6) == 1)
   {
-    contacts_eraseAll();
+    contacts_clearAll();
   }
   
   leds(0b100001);
@@ -70,8 +73,7 @@ void main()
   while(1)
   { 
     memset(&their, 0, sizeof(info));
-    y = accel(AY);
-    if (y < -35)
+    if (accel(AY) < -35)
     {
       clear();
       leds(0b000000);
@@ -85,9 +87,8 @@ void main()
       oledprint(last);
       rotate180();
       screen_update();
-      while(y < -35)
+      while(accel(AY) < -35)
       {
-        y = accel(AY);
         pause(200);
       }
       screen_auto(ON);
@@ -100,9 +101,7 @@ void main()
       oledprint("Sending...");
       led(4, ON); 
       led(1, ON);
-      rgb(L, BLUE);
-      irprint("%7s\n%5s\n%5s\n", my.id, "INIT", CNT_sec);
-      rgb(L, OFF);
+      irprint("%7s\n%5s\n", my.id, "INIT");
       cursor(6, 4);
       oledprint("DONE");
       cursor(3, 6);
@@ -111,14 +110,17 @@ void main()
       led(1, OFF);
       
       int t = CNT;
-      int dt = CLKFREQ * 2;
+      unsigned int dt = CLKFREQ * 2;
       int response = 1;
       char i_type[5];
           
       while(1)
       {
-        irscan("%s%s%s", their.id, i_type, their.cnt);  // Receive contact struct
-        if (strlen(their.id) > 0) break;
+        irscan("%s%s", their.id, i_type);
+        if (strlen(their.id) > 0)
+        {
+          break;
+        }          
         if (CNT - t > dt)
         {
           clear();
@@ -132,6 +134,7 @@ void main()
       
       if (!strcmp(i_type, "RESP"))
       {
+        save_contact(&their);
         strcpy(last, their.id);
         cursor(2, 1);
         oledprint("INTERACTION!");
@@ -155,8 +158,7 @@ void main()
         oledprint("Keep badge");
         cursor(1, 6);
         oledprint("facing hotspot");
-        //ir_txContacts();
-        //clear_inbox();
+        ir_txContacts();
         rgb(L, OFF);
         rgb(R, OFF);
         pause(200);
@@ -171,7 +173,7 @@ void main()
     else
     {
       char i_type[5];
-      irscan("%s%s%s", their.id, i_type, their.cnt);
+      irscan("%s%s", their.id, i_type);
       
       if (strlen(their.id) > 0)
       {
@@ -179,10 +181,11 @@ void main()
       
         if (!strcmp(i_type, "INIT"))
         {
+          save_contact(&their);
           clear();
           cursor(2, 1);
           oledprint("INTERACTION!");
-          irprint("%7s\n%5s\n%5s\n", my.id, "RESP", CNT_sec);
+          irprint("%7s\n%5s\n", my.id, "RESP");
           cursor(3, 4);
           oledprint("ID: %s", their.id);
           cursor(0, 7);
@@ -206,12 +209,36 @@ void main()
       }            
     }      
   }    
+}
+
+void save_contact(info* c)
+{
+  eeprint("%7s\n%u\n", c->id, CNT_sec);
+}
+
+void ir_txContacts(void)
+{
+  clear();
+  cursor(0, 0);
+  text_size(SMALL);
+  int c_count = contacts_count();
+  for (int i = 0; i < c_count; i++)
+  {
+    cursor(0, i);
+    char id[7];
+    unsigned int cnt;
+    eescan(i, "%s%u", &id, &cnt);
+    oledprint("%s %u", id, cnt);
+    irprint("%7s\n%u\n", id, cnt);
+    pause(200);
+  }
+  irprint("%7s\n%u\n", "irDone", 0);
 }  
 
 void OSHorWait(int sec)
 {
   int t = CNT;
-  int dt = CLKFREQ * sec;
+  unsigned int dt = CLKFREQ * sec;
   while (button(6) != 1)
   {
    if (CNT - t > dt)

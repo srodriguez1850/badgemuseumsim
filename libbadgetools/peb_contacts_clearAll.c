@@ -9,12 +9,13 @@ volatile int eeRecCount, eeNextAddr, eeBadgeOk,
              eeRecHome, eeRecOffice;
 volatile int eeHome;
 
-void contacts_eraseAll()
+void contacts_clearAll()
 {
   //printi("EEPROM erase takes 20 seconds...");
+  int upperAddress = 32768 + (contacts_count() * 128);
   unsigned char str[128];
   memset(str, 255, 128);
-  for(int i = 32768; i < 65536; i += 128)
+  for(int i = 32768; i < upperAddress; i += 128)
   {
     //memset(str, 255, 128);
     ee_putStr(str, 128, i);

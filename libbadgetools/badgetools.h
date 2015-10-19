@@ -504,6 +504,12 @@ int contacts_count();
 void contacts_eraseAll();
 
 /**
+ * @brief Erases user portion of EEPROM by placing 255 in each cell.  
+ * This erasure affects addresses where contacts are saved.
+ */
+void contacts_clearAll();
+
+/**
  * @brief Display all contacts in SimpleIDE Terminal.
  */
 void contacts_displayAll();

@@ -90,6 +90,7 @@ peb_stringView.c
 peb_text.c
 sscan_ct.c
 peb_irclear.c
+peb_contacts_clearAll.c
 >compiler=C
 >memtype=cmm main ram compact
 >optimize=-Os
