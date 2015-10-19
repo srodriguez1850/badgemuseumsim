@@ -151,9 +151,6 @@ void ir_send(info *my)
   ircom_str(my->email);
   ircom_tx(0);
   pause(1);
-  ircom_str(my->itime);
-  ircom_tx(0);
-  pause(1);
   ircom_tx(ETX);
   pause(1);
   ircom_txflush();
@@ -199,8 +196,6 @@ void ir_receive()
     strcpy(get->name, s);
     int offset = strlen(s) + 1;
     strcpy(get->email, &s[offset]);
-    offset += strlen(s) + 1;
-    strcpy(get->itime, &s[offset]);
     if(strncmp(get->name, "hotspot", 7) == 0)
     {
       //led(2, ON);                                // Commented 8/23 4:46 PM
@@ -272,9 +267,6 @@ void ir_txContacts(void)
     offset += ss;
     ss = 1 + strlen(&s[offset]);
     strcpy(record.email, &s[offset]);
-    offset += ss;
-    ss = 1 + strlen(&s[offset]);
-    strcpy(record.itime, &s[offset]);
     a += (offset + ss);
     ir_send(&record);
     pause(100);
@@ -381,9 +373,6 @@ int ee_badge_check(void)
     ss = 1 + strlen(my.email);
     ee_putStr(my.email, ss, a);
     a += ss;
-    ss = 1 + strlen(my.itime);
-    ee_putStr(my.itime, ss, a);
-    a += ss;
     badgeLastRecordAddr = a;
     badgeRecordCount = 1;
     ee_putInt(badgeRecordCount, badgeInfoAnchor);
@@ -404,9 +393,6 @@ void ee_save(info *contact)
   a += ss;
   ss = 1 + strlen(contact->email);
   ee_putStr(contact->email, ss, a);
-  a += ss;
-  ss = 1 + strlen(contact->itime);
-  ee_putStr(contact->itime, ss, a);
   a += ss;
   ee_putInt(a, badgeInfoAnchor + 4);
   badgeRecordCount += 1;
@@ -431,13 +417,9 @@ void ee_displayContacts(void)
     offset += ss;
     ss = 1 + strlen(&s[offset]);
     strcpy(record.email, &s[offset]);
-    offset += ss;
-    ss = 1 + strlen(&s[offset]);
-    strcpy(record.itime, &s[offset]);
     a += (offset + ss);
     print("name: %s\n", record.name);
     print("email: %s\n", record.email);
-    print("time: %d\n", record.itime);
   }    
 }    
 
@@ -462,15 +444,10 @@ void ee_uploadContacts(fdserial *term)
     offset += ss;
     ss = 1 + strlen(&s[offset]);
     strcpy(record.email, &s[offset]);
-    offset += ss;
-    ss = 1 + strlen(&s[offset]);
-    strcpy(record.itime, &s[offset]);
     a += (offset + ss);
     dprint(term, record.name);
     dprint(term, "\n");
     dprint(term, record.email);
-    dprint(term, "\n");
-    dprint(term, record.itime);
     dprint(term, "\n");
   }
 }    

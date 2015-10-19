@@ -98,7 +98,6 @@ void main()
           message_get(&their);
           if(!strcmp(their.name, "txDone"))
           {
-            //dprint(port, "End of records.\n\n");
             char_size(SMALL);
             cursor(0, 5);
             display("Upload complete");
@@ -111,8 +110,8 @@ void main()
             break;
           }
           ee_save(&their);
-          //dprint(port, "Name: %s\n", their.name);
-          //dprint(port, "Email: %s\n", their.email);       
+          dprint(port, "Name: %s\n", their.name);
+          dprint(port, "Email: %s\n", their.email);       
         }
       }        
     }      

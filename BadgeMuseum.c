@@ -2,11 +2,12 @@
 #include "badgealpha.h"
 #include "fdserial.h"
 
-info my = {{" "}, {"INFO"}, 0, 0};
-info my_init = {{" "}, {"INIT"}, 0, 0};
-info my_resp = {{" "}, {"RESP"}, 0, 0};
+info my = {{" "}, {"INFO"}, 0};
+info my_init = {{" "}, {"INIT"}, 0};
+info my_resp = {{" "}, {"RESP"}, 0};
+info my_time = {0, 0, 0};
 info their;
-info last = {{" "}, {" "}, 0, 0};
+info last = {{" "}, {" "}, 0};
 
 int id_address = 65335;
 
@@ -15,15 +16,22 @@ fdserial *port;
 
 int x, y, z;  // accelerometer
 int heldatstart = 0;
+volatile unsigned int CNT_sec;
 
 void screen_img180();
 void screen_img(char *imgaddr);
+void cnt_seconds(void);
+void OSHorWait(int sec);
+void cnt_sec_to_char(unsigned int s);
 
 void main()
 {
   // Initialize badge and serial connection
   badge_setup();
   simpleterm_close();
+  
+  // Start second counter
+  cog_run(&cnt_seconds, 64);
   
   // Pull ID from EEPROM
   leds_set(0b111111);
@@ -96,7 +104,6 @@ void main()
       led(4, ON); 
       led(1, ON);
       rgb(L, BLUE);
-      strcpy(my_init.itime, (char)CNT);
       ir_send(&my_init);
       rgb(L, OFF);
       cursor(6, 4);
@@ -127,7 +134,9 @@ void main()
       {
         memset(&last, 0, sizeof(info));
         last = their;
+        cnt_sec_to_char(CNT_sec);
         ee_save(&their);
+        ee_save(&my_time);
         cursor(2, 1);
         display("INTERACTION!");
         cursor(3, 4);
@@ -135,7 +144,7 @@ void main()
         cursor(0, 7);
         display("OSH to Continue.");
         rgb(L, OFF);
-        while(pad(6) != 1);
+        OSHorWait(5);
         rgb(R, OFF);
         clear();
       }
@@ -171,11 +180,12 @@ void main()
       {
         memset(&last, 0, sizeof(info));
         last = their;
+        cnt_sec_to_char(CNT_sec);
         ee_save(&their);
+        ee_save(&my_time);
         cursor(2, 1);
         display("INTERACTION!");
         rgb(L, BLUE);
-        strcpy(my_resp.itime, (char)CNT);
         ir_send(&my_resp);
         rgb(L, OFF);
         cursor(3, 4);
@@ -183,15 +193,7 @@ void main()
         cursor(0, 7);
         display("OSH to Continue.");
         rgb(L, OFF);
-        int t = CNT;
-        int dt = CLKFREQ * 2;
-        while (pad(6) != 1)
-        {
-          if (CNT - t > dt)
-          {
-            break;
-          }
-        }
+        OSHorWait(5);
         rgb(R, OFF);
         clear();
       }           
@@ -209,35 +211,6 @@ void main()
     }      
   }    
 }  
-
-/*void screen_img180()
-{
-  uint32_t screenbuf = screen_getBuffer();
-  char *scrbuf = (char *) screenbuf;
-  char altbuf[1024];
-  memset(altbuf, 0, 1024);
-  screen_autoUpdate(OFF);
-  int byte, bit, pixel, xp, yp;
-  for(int x = 0; x < 128; x++)
-  {
-    for(int y = 0; y < 64; y++)
-    {
-      byte = ((y >> 3) << 7) + x;
-      bit = y % 8;  
-      pixel = 1 & (scrbuf[byte] >> bit);
-      
-      xp = 127 - x;
-      yp = 63 - y;
-      
-      byte = ((yp >> 3) << 7) + xp;
-      bit = yp % 8;  
-      altbuf[byte] |= (pixel << bit);
-    }
-  } 
-  memset(scrbuf, 0, 1024);
-  memcpy(scrbuf, altbuf, 1024);
-  screen_autoUpdate(ON); 
-}*/
 
 void screen_img180()
 {
@@ -270,14 +243,41 @@ void screen_img180()
   screen_autoUpdate(ON); 
 }
 
-/*
-void screen_img(char *imgaddr)
+void OSHorWait(int sec)
 {
-  uint32_t screenbuf = screen_getBuffer();
-  char *scrbuf = (char *) screenbuf;
-  screen_autoUpdate(OFF);
-  memcpy(scrbuf, imgaddr, 1024);
-  screen_autoUpdate(ON); 
-}  
+  int t = CNT;
+  unsigned int dt = CLKFREQ * sec;
+  while (pad(6) != 1)
+  {
+   if (CNT - t > dt)
+   {
+     break;
+   }
+ } 
+}
 
-*/
+void cnt_seconds(void)
+{
+  CNT_sec = 0;
+  int t = CNT;
+  while (1)
+  {
+    if (CNT - t > CLKFREQ)
+    {
+      t = CNT;
+      CNT_sec++;
+    }      
+  }      
+}
+
+void cnt_sec_to_char(unsigned int s)
+{
+  char b[5];
+  b[0] = (s >> 24) & 0xFF;
+  b[1] = (s >> 16) & 0xFF;
+  b[2] = (s >> 8) & 0xFF;
+  b[3] = s & 0xFF;
+  b[4] = 0;
+  
+  strcpy(my_time.email, b);
+}  

@@ -232,8 +232,7 @@ INLINE__ int Shr__(unsigned int a, unsigned int b) { return (a>>b); }
 //modified 8/24
 typedef struct user_info{
   char name[7];
-  char email[7];
-  char itime;
+  char email[5];
   char endchar;
 } info;  
 
