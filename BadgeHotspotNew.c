@@ -2,26 +2,22 @@
 #include "badgetools.h"
 #include "fdserial.h"
 
-typedef struct info_st
-{
-  char id[7];
-  unsigned int cnt;
-} info;
-
-info their;
+char id[7] = "htspt1";
 
 char handshake[5];
 fdserial* port;
 unsigned int CLKLIMIT;
 
 void upload_contacts(fdserial* port);
-void save_contact(info* c);
+void save_contact(char c[]);
+void preserve_header(void);
 
 void main()
 {
   badge_setup();
   simpleterm_close();
   contacts_clearAll();
+  preserve_header();
   CLKLIMIT = CLKFREQ * 2;
   
   // Connection to host routine (FORCE CONNECTION TO HOST)
@@ -29,7 +25,7 @@ void main()
   text_size(SMALL);
   cursor(2, 4);
   oledprint("Connecting...");
-  /*
+
   while(1)
   {
     dprint(port, "Propeller\n");
@@ -50,7 +46,7 @@ void main()
       break;
     }      
   }
-  */
+
   clear();
   
   while(1)
@@ -69,22 +65,19 @@ void main()
     cursor(0, 7);
     oledprint("upload your data");
     
-    memset(&their, 0, sizeof(info));
+    char their_id[7];
+    memset(&their_id, 0, 7);
     
     int t = CNT;
     char i_type[5];
     
-    // WHY IS THERE A TIMING MISMATCH
-    // WHY IS IT BEING CUT OFF
+    irscan("%s%s", their_id, i_type);
     
-    irscan("%s%s", their.id, i_type);
-    irclear();
-    
-    if (strlen(their.id) > 0)
+    if (strlen(their_id) > 0)
     {
-      pause(50);
       clear();
-      irprint("%7s\n%5s\n", "htspt1", "DUMP");
+      eeprint("%s,%u,%s\n", their_id, 0, "INFO");
+      irprint("%s\n%s\n", "htspt1", "DUMP");
       
       text_size(SMALL);
       cursor(2, 2);
@@ -92,10 +85,10 @@ void main()
       
       while(1)
       {
-        pause(200);
-        memset(&their, 0, sizeof(info));
-        irscan("%s%u", their.id, their.cnt);
-        irclear();
+        char b[128];
+        memset(&b, 0, 128);
+        irscan("%s", b);
+        
         if (CNT - t > CLKLIMIT)
         {
           clear();
@@ -107,28 +100,28 @@ void main()
           dprint(port, "txBegin\n");  
           dprint(port, "Timeout\n");
           contacts_clearAll();
+          preserve_header();
           pause(2000);
           clear();
           break;
         }
-        if (strlen(their.id) > 0)
+        if (strlen(b) > 0)
         {
           t = CNT;
-          if(!strcmp(their.id, "irDone"))
+          if(!strcmp(b, "irDone"))
           {
             text_size(SMALL);
             cursor(0, 5);
             oledprint("Upload complete");
             dprint(port, "txBegin\n");
-            //upload_contacts(port);
+            upload_contacts(port);
             contacts_clearAll();
+            preserve_header();
             pause(1000);
             clear();
             break;
           }
-          save_contact(&their);
-          dprint(port, "ID: %s\n", their.id);
-          dprint(port, "Cnt: %u\n", their.cnt);       
+          save_contact(b); 
         }
       }        
     }      
@@ -137,17 +130,22 @@ void main()
 
 void upload_contacts(fdserial* port)
 {
-  int c_count = contacts_count();
+  unsigned int c_count = contacts_count();
+  dprint(port, "%u\n", c_count);
   for (int i = 0; i < c_count; i++)
   {
-    char id[7];
-    unsigned int cnt;
-    eescan(i, "%s%u", &id, &cnt);
-    dprint(port, "%7s\n%u", id, cnt);
+    char b[128];
+    eescan(i, "%s", &b);
+    dprint(port, "%s\n", b);
   }    
 }
 
-void save_contact(info* c)
+void save_contact(char c[])
 {
-  eeprint("%7s\n%u\n", c->id, c->cnt);
+  eeprint("%s\n", c);
 }
+
+void preserve_header(void)
+{
+  eeprint("%s,%u,%s\n", id, 0, "DUMP");
+}  

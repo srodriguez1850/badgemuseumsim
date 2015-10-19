@@ -97,28 +97,34 @@ try:
 			continue
 
 	    # Get records, should always find a record
-		num_records = ord(timeout_buffer[0])
+		num_records = int(timeout_buffer[0])
 
-		field1 = []
-		field2 = []
+		badge_ids = []
+		badge_times = []
+		badge_itypes = []
+
 		for i in xrange(0, num_records):
-			field1.append(stripped(port.readline()))
-			field2.append(stripped(port.readline()))
+			t = []
+			t = (stripped(port.readline())).split(',')
+			badge_ids.append(t[0])
+			badge_times.append(t[1])
+			badge_itypes.append(t[2])
 
-		if 'DUMP' not in field2[0]:
-			print str(datetime.datetime.now()) + ': Retrieved interactions, content may be corrupted.'
+		if 'DUMP' not in badge_itypes[0]:
+			print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
 			continue
 
 		print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
 
 		if DEBUG_SERIAL_LIST == 1:
-			print 'field1: ' + str(field1)
-			print 'field2: ' + str(field2)
+			print 'IDs: ' + str(badge_ids)
+			print 'Times: ' + str(badge_times)
+			print 'Types: ' + str(badge_itypes)
 
 		# Dump to file
 		f = open('hotspotdata.txt', 'a')
 		for i in xrange(2, num_records):
-			f.write(field1[1] + ',' + field1[i] + '\n')
+			f.write(badge_ids[1] + ',' + badge_ids[i] + ',' + badge_times[i] + '\n')
 		f.close()
 
 except Exception, err:

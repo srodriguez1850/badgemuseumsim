@@ -2,15 +2,6 @@
 #include "badgetools.h"
 #include "fdserial.h"
 
-typedef struct info_st
-{
-  char id[7];
-  unsigned int cnt;
-} info;
-
-info my = {{" "}, 0};
-info their;
-
 int id_address = 65335;
 
 char id[7];
@@ -25,7 +16,7 @@ volatile unsigned int CNT_sec;
 void OSHorWait(int sec);
 void cnt_seconds(void);
 void ir_txContacts(void);
-void save_contact(info* c);
+void save_contact(char c[], char t[]);
 
 void main()
 {
@@ -36,7 +27,6 @@ void main()
   // Pull ID from EEPROM
   leds(0b111111);
   ee_getStr(id, 7, id_address);
-  strcpy(my.id, id);
   
   // Start second counter
   cog_run(&cnt_seconds, 64);
@@ -72,7 +62,6 @@ void main()
   
   while(1)
   { 
-    memset(&their, 0, sizeof(info));
     if (accel(AY) < -35)
     {
       clear();
@@ -80,7 +69,7 @@ void main()
       screen_auto(OFF);
       text_size(SMALL);
       cursor(3, 2); 
-      oledprint("ID: %s", my.id);
+      oledprint("ID: %s", id);
       cursor(0, 5);
       oledprint("Last Interaction");
       cursor(5, 7);
@@ -93,7 +82,7 @@ void main()
       }
       screen_auto(ON);
       clear();
-    }
+    }  
     else if (button(1) == 1 && button(4) == 1)
     {
       clear();
@@ -101,7 +90,7 @@ void main()
       oledprint("Sending...");
       led(4, ON); 
       led(1, ON);
-      irprint("%7s\n%5s\n", my.id, "INIT");
+      irprint("%7s\n%5s\n", id, "INIT");
       cursor(6, 4);
       oledprint("DONE");
       cursor(3, 6);
@@ -112,12 +101,15 @@ void main()
       int t = CNT;
       unsigned int dt = CLKFREQ * 2;
       int response = 1;
+      char their_id[7];
       char i_type[5];
           
       while(1)
       {
-        irscan("%s%s", their.id, i_type);
-        if (strlen(their.id) > 0)
+        memset(&their_id, 0, 7);
+        memset(&i_type, 0, 5);
+        irscan("%s%s", their_id, i_type);
+        if (strlen(their_id) > 0)
         {
           break;
         }          
@@ -134,12 +126,12 @@ void main()
       
       if (!strcmp(i_type, "RESP"))
       {
-        save_contact(&their);
-        strcpy(last, their.id);
+        save_contact(their_id, i_type);
+        strcpy(last, their_id);
         cursor(2, 1);
         oledprint("INTERACTION!");
         cursor(3, 4);
-        oledprint("ID: %s", their.id);
+        oledprint("ID: %s", their_id);
         cursor(0, 7);
         oledprint("OSH to Continue.");
         rgb(L, OFF);
@@ -173,21 +165,24 @@ void main()
     else
     {
       char i_type[5];
-      irscan("%s%s", their.id, i_type);
+      char their_id[7];
+      memset(&their_id, 0, 7);
+      memset(&i_type, 0, 5);
+      irscan("%s%s", their_id, i_type);
       
-      if (strlen(their.id) > 0)
+      if (strlen(their_id) > 0)
       {
-        strcpy(last, their.id);
+        strcpy(last, their_id);
       
         if (!strcmp(i_type, "INIT"))
         {
-          save_contact(&their);
+          save_contact(their_id, i_type);
+          irprint("%s\n%s\n", id, "RESP");
           clear();
           cursor(2, 1);
           oledprint("INTERACTION!");
-          irprint("%7s\n%5s\n", my.id, "RESP");
           cursor(3, 4);
-          oledprint("ID: %s", their.id);
+          oledprint("ID: %s", their_id);
           cursor(0, 7);
           oledprint("OSH to Continue.");
           rgb(L, OFF);
@@ -200,7 +195,7 @@ void main()
       {
         text_size(LARGE);
         cursor(0, 0); 
-        oledprint("%s", my.id);
+        oledprint("%s", id);
         text_size(SMALL);
         cursor(4, 6);
         oledprint("...is ready.");
@@ -211,28 +206,27 @@ void main()
   }    
 }
 
-void save_contact(info* c)
+void save_contact(char c[], char t[])
 {
-  eeprint("%7s\n%u\n", c->id, CNT_sec);
+  eeprint("%s,%u,%s\n", c, CNT_sec, t);
 }
 
 void ir_txContacts(void)
 {
-  clear();
-  cursor(0, 0);
-  text_size(SMALL);
+  //clear();
+  //cursor(0, 0);
+  //text_size(SMALL);
   int c_count = contacts_count();
   for (int i = 0; i < c_count; i++)
   {
-    cursor(0, i);
-    char id[7];
-    unsigned int cnt;
-    eescan(i, "%s%u", &id, &cnt);
-    oledprint("%s %u", id, cnt);
-    irprint("%7s\n%u\n", id, cnt);
-    pause(200);
+    //cursor(0, i);
+    char b[128];
+    eescan(i, "%s", &b);
+    //oledprint("%s", b);
+    irprint("%s\n", b);
+    pause(50);
   }
-  irprint("%7s\n%u\n", "irDone", 0);
+  irprint("%s\n", "irDone");
 }  
 
 void OSHorWait(int sec)
