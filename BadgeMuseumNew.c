@@ -226,6 +226,8 @@ void ir_txContacts(void)
     irprint("%s\n", b);
     pause(50);
   }
+  irprint("%u\n", CNT_sec);
+  pause(50);
   irprint("%s\n", "irDone");
 }  
 

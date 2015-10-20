@@ -131,7 +131,7 @@ void main()
 void upload_contacts(fdserial* port)
 {
   unsigned int c_count = contacts_count();
-  dprint(port, "%u\n", c_count);
+  dprint(port, "%u\n", c_count - 1);
   for (int i = 0; i < c_count; i++)
   {
     char b[128];

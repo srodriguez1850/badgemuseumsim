@@ -110,11 +110,14 @@ try:
 			badge_times.append(t[1])
 			badge_itypes.append(t[2])
 
+		badge_timeframe = int(stripped(port.readline()))
+
 		if 'DUMP' not in badge_itypes[0]:
 			print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
 			continue
 
-		print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
+		dt_now = datetime.datetime.now()
+		print str(dt_now) + ': Retrieved interactions, saving to file.'
 
 		if DEBUG_SERIAL_LIST == 1:
 			print 'IDs: ' + str(badge_ids)
@@ -124,7 +127,7 @@ try:
 		# Dump to file
 		f = open('hotspotdata.txt', 'a')
 		for i in xrange(2, num_records):
-			f.write(badge_ids[1] + ',' + badge_ids[i] + ',' + badge_times[i] + '\n')
+			f.write(badge_ids[1] + ',' + badge_ids[i] + ',' + (dt_now - datetime.timedelta(seconds=badge_timeframe) + datetime.timedelta(seconds=int(badge_times[i]))).strftime('%H:%M:%S')  + '\n')
 		f.close()
 
 except Exception, err:
