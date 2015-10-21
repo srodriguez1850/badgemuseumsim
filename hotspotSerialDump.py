@@ -116,8 +116,8 @@ try:
 			print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
 			continue
 
+		print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
 		dt_now = datetime.datetime.now()
-		print str(dt_now) + ': Retrieved interactions, saving to file.'
 
 		if DEBUG_SERIAL_LIST == 1:
 			print 'IDs: ' + str(badge_ids)
