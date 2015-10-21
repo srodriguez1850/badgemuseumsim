@@ -97,7 +97,7 @@ try:
 			continue
 
 	    # Get records, should always find a record
-		num_records = int(timeout_buffer[0])
+		num_records = int(timeout_buffer)
 
 		badge_ids = []
 		badge_times = []
