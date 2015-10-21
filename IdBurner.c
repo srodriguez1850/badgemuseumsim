@@ -1,13 +1,13 @@
 #include "simpletools.h"
 #include "badgealpha.h"
-#include "fdserial.h"
+//#include "fdserial.h"
 
 info my = {{"TEST"}, {"123890"}, 0};
 info* get;
 
 int addr = 65335;
 
-fdserial *port;
+//fdserial *port;
 
 char newname[6];
 void save_id_info();
@@ -16,9 +16,9 @@ void main()
 {
   // Initialize badge and serial connection
   badge_setup();
-  simpleterm_close();
+  //simpleterm_close();
 
-  port = fdserial_open(31, 30, 0, 115200);
+  //port = fdserial_open(31, 30, 0, 115200);
   
   get_to_get();
   clear();
@@ -32,9 +32,9 @@ void main()
   
 
   leds_set(0b111111);
-  dprint(port, "Give me a name\n");
+  print("Give me a name\n");
 
-  dscan(port, "%s", newname);
+  scan("%s", newname);
   char_size(SMALL);
   cursor(0, 5);
   strcpy(my.name, newname);
