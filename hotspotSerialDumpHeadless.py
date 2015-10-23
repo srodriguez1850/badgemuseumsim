@@ -97,10 +97,11 @@ def mainloop():
                 pass
 
             # Debug transmission
-            #print port.read(port.inWaiting())
-            #print port.inWaiting()
+            print port.read(port.inWaiting())
+            print port.inWaiting()
 
             timeout_buffer = port.readline()
+            print(timeout_buffer)
             if stripped(timeout_buffer) == 'Timeout':
                 print str(datetime.datetime.now()) + ': IR connection timed out, please try again.'
                 continue
