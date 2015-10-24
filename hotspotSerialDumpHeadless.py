@@ -8,8 +8,8 @@ DEBUG_SERIAL_LIST = 1
 
 ### OPTIONS ###
 
-theserver = 'http://127.0.0.1:8000/'
-#theserver = 'http://192.168.1.42:8000/'
+#theserver = 'http://127.0.0.1:8000/'
+theserver = 'http://192.168.1.42:8000/'
 
 
 ### HELPER FUNCTIONS ###
@@ -97,8 +97,8 @@ def mainloop():
                 pass
 
             # Debug transmission
-            print port.read(port.inWaiting())
-            print port.inWaiting()
+            #print port.read(port.inWaiting())
+            #print port.inWaiting()
 
             timeout_buffer = port.readline()
             print(timeout_buffer)
@@ -116,6 +116,7 @@ def mainloop():
             for i in xrange(0, num_records):
                 t = []
                 t = (stripped(port.readline())).split(',')
+                print(t)
                 badge_ids.append(t[0])
                 badge_times.append(t[1])
                 badge_itypes.append(t[2])
@@ -127,7 +128,7 @@ def mainloop():
                 continue
 
             print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
-
+            time.sleep(1)
 
             #dt_now = datetime.datetime.now()
             #INSTEAD of getting time from local system, get time from server
