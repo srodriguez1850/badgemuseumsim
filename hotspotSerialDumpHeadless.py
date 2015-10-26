@@ -70,7 +70,7 @@ def mainloop():
         except:
             print('Unable to find a hotspot, retrying in 500 ms.')
             time.sleep(0.5);
-            print("retrying")
+            print("Retrying")
             time.sleep(0.1);
             return
 
@@ -116,13 +116,17 @@ def mainloop():
             for i in xrange(0, num_records):
                 t = []
                 t = (stripped(port.readline())).split(',')
-                print(t)
+                # Check for character replacement
+                if (not(t[0].isalnum() and t[1].isalnum() and t[2].isalnum())):
+                    print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
+                    continue
                 badge_ids.append(t[0])
                 badge_times.append(t[1])
                 badge_itypes.append(t[2])
 
             badge_timeframe = int(stripped(port.readline()))
 
+            # Check for data shifting
             if 'DUMP' not in badge_itypes[0]:
                 print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
                 continue
@@ -164,7 +168,5 @@ def mainloop():
         print(traceback.format_exc())
         #raw_input('Enter to continue.')
         port.close()
-
-    # checksum on content (pass number to serial and then checksum on the host)
 
 mainloop()

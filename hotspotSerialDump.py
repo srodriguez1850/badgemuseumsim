@@ -106,12 +106,17 @@ try:
 		for i in xrange(0, num_records):
 			t = []
 			t = (stripped(port.readline())).split(',')
+			# Check for character replacement
+			if (not(t[0].isalnum() and t[1].isalnum() and t[2].isalnum())):
+				print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
+				continue
 			badge_ids.append(t[0])
 			badge_times.append(t[1])
 			badge_itypes.append(t[2])
 
 		badge_timeframe = int(stripped(port.readline()))
 
+		# Check for data shifting
 		if 'DUMP' not in badge_itypes[0]:
 			print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
 			continue
