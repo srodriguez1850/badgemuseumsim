@@ -10,6 +10,11 @@ DEBUG_SERIAL_LIST = 1
 
 #theserver = 'http://127.0.0.1:8000/'
 theserver = 'http://192.168.1.42:8000/'
+blinkcounter = 0
+
+f = open('/sys/devices/virtual/misc/gpio/mode/gpio13', 'w')
+f.write('1')
+f.close()
 
 
 ### HELPER FUNCTIONS ###
@@ -51,6 +56,7 @@ def stripped(string):
 
 def mainloop():
     ### MAIN ###
+    blinkcounter = 1;
     try:
         ports = serial_ports()
         for p in ports:
@@ -80,7 +86,12 @@ def mainloop():
         else:
             print 'Dynamic port opened, connecting to hotspot.'
         port.open()
+        counter = 0;
         while stripped(port.readline()) != 'Propeller':
+            counter = counter + 1
+            if (counter >= 5):
+                port.close()
+                return
             time.sleep(1)
         print 'Connected to hotspot.'
 
@@ -91,6 +102,17 @@ def mainloop():
         print 'Opened stream.\n'
 
         while True:
+            print("cycle")
+            for i in range(0, 10):
+                blinkcounter = blinkcounter + 1
+                g = open('/sys/devices/virtual/misc/gpio/pin/gpio13', 'w')
+                j = blinkcounter % 2
+                time.sleep(.1)
+                if (j == 0):
+                    g.write('0')
+                else:
+                    g.write('1')
+                g.close()
 
             # Keep an open stream of data
             while 'txBegin' not in stripped(port.readline()):
