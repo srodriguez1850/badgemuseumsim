@@ -139,6 +139,8 @@ def mainloop():
                 t = []
                 t = (stripped(port.readline())).split(',')
                 # Check for character replacement
+                if (len(t) < 3):
+                    continue
                 if (not(t[0].isalnum() and t[1].isalnum() and t[2].isalnum())):
                     print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
                     continue
