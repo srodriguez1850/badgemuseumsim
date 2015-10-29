@@ -135,6 +135,8 @@ def mainloop():
             badge_times = []
             badge_itypes = []
 
+            record_count = 0;
+
             for i in xrange(0, num_records):
                 t = []
                 t = (stripped(port.readline())).split(',')
@@ -144,6 +146,7 @@ def mainloop():
                 if (not(t[0].isalnum() and t[1].isalnum() and t[2].isalnum())):
                     print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
                     continue
+                record_count = record_count + 1
                 badge_ids.append(t[0])
                 badge_times.append(t[1])
                 badge_itypes.append(t[2])
@@ -155,8 +158,8 @@ def mainloop():
                 print str(datetime.datetime.now()) + ': Retrieved corrupted content, please try again.'
                 continue
 
-            print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
-            time.sleep(1)
+            #print str(datetime.datetime.now()) + ': Retrieved interactions, saving to file.'
+            #time.sleep(1)
 
             #dt_now = datetime.datetime.now()
             #INSTEAD of getting time from local system, get time from server
@@ -174,7 +177,7 @@ def mainloop():
             #IN ADDITION to saving to file, also Post to server
             data = {}
             data['interactions'] = [];
-            for i in xrange(2, num_records):
+            for i in xrange(2, record_count):
                 data['interactions'].append(badge_ids[1] + ',' + badge_ids[i] + ',' + (dt_now - datetime.timedelta(seconds=badge_timeframe) + datetime.timedelta(seconds=int(badge_times[i]))).strftime('%H:%M:%S'))
             print(data);
             req = urllib2.Request(theserver+'addmany/')
@@ -184,7 +187,7 @@ def mainloop():
 
             # Dump to file
             f = open('hotspotdata.txt', 'a')
-            for i in xrange(2, num_records):
+            for i in xrange(2, record_count):
                 f.write(badge_ids[1] + ',' + badge_ids[i] + ',' + (dt_now - datetime.timedelta(seconds=badge_timeframe) + datetime.timedelta(seconds=int(badge_times[i]))).strftime('%H:%M:%S')  + '\n')
             f.close()
 
