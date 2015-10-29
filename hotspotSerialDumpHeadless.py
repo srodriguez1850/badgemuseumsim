@@ -186,7 +186,7 @@ def mainloop():
 
 
             # Dump to file
-            f = open('hotspotdata.txt', 'a')
+            f = open('/home/ubuntu/hotspotdata.txt', 'a')
             for i in xrange(2, record_count):
                 f.write(badge_ids[1] + ',' + badge_ids[i] + ',' + (dt_now - datetime.timedelta(seconds=badge_timeframe) + datetime.timedelta(seconds=int(badge_times[i]))).strftime('%H:%M:%S')  + '\n')
             f.close()
