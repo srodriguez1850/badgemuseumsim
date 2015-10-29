@@ -53,7 +53,12 @@ void main()
   
   if (heldatstart == 1 && button(6) == 1)
   {
+    rgb(L, RED);
+    rgb(R, RED);
     contacts_clearAll();
+    pause(500);
+    rgb(L, OFF);
+    rgb(R, OFF);
   }
   
   leds(0b100001);
